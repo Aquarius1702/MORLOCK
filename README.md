@@ -14,7 +14,7 @@ Potpuni poslovni i funkcionalni zahtjevi nalaze se u projektnoj specifikaciji.
 
 ## Pokretanje
 
-Upute za instalaciju, konfiguraciju i pokretanje bit će dodane nakon odabira tehnologije.
+Backend je predviđen za postojeći web hosting s PHP-om i MySQL/MariaDB bazom. Upute za instalaciju, konfiguraciju i pokretanje bit će dodane nakon što se potvrde minimalna arhitektura i verzija PHP-a.
 
 ## Dokumentacija
 

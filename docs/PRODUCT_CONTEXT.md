@@ -796,18 +796,7 @@ Tu razliku treba zadržati u terminologiji i izvještajima.
 
 Za dnevne izvještaje treba koristiti lokalni kalendarski dan lokacije.
 
-Primjer za PostgreSQL:
-
-```sql
-SELECT
-    (created_at AT TIME ZONE 'Europe/Zagreb')::date AS dan,
-    SUM(price) AS promet
-FROM rental
-GROUP BY 1
-ORDER BY 1;
-```
-
-To grupira najmove prema lokalnom datumu, od ponoći do ponoći.
+Konačni SQL upit mora biti prilagođen MySQL/MariaDB-u i odabranoj strategiji spremanja vremenskih oznaka. Mora grupirati najmove prema lokalnom datumu, od ponoći do ponoći.
 
 **PREDLOŽENO:** Svaka lokacija može imati vlastitu vremensku zonu, što je korisno za globalni proizvod.
 
@@ -823,26 +812,15 @@ Nemoj brisati povijesne podatke zbog promjena zaposleničkih računa.
 
 Razmatrane su tri mogućnosti:
 
-1. Unix epoch u milisekundama.
-2. Unix epoch u sekundama.
-3. PostgreSQL `TIMESTAMPTZ`.
+1. MySQL/MariaDB `DATETIME` vrijednosti spremljene u UTC-u.
+2. MySQL/MariaDB `TIMESTAMP` vrijednosti.
+3. Unix epoch u sekundama ili milisekundama.
 
 ## 14.1. Preporuka
 
-**PREDLOŽENO**
+**OTVORENO**
 
-U PostgreSQL-u koristiti `TIMESTAMPTZ` za trenutke u vremenu.
-
-Prednosti:
-
-- Jednostavniji SQL upiti.
-- Prirodno grupiranje po datumima.
-- Podrška za vremenske zone.
-- Jednostavna usporedba vremenskih oznaka.
-- Mikrosekundna preciznost.
-- Veličina od 8 bajtova.
-
-Epoch sekunde u `BIGINT` također su tehnički prihvatljive, ali nisu nužno brže u mjeri koja bi bila značajna za Morlock.
+Konačni vremenski tipovi odredit će se pri projektiranju MySQL/MariaDB sheme. Bez obzira na odabrani tip, apsolutni trenutci moraju se spremati jednoznačno, a lokalna vremenska zona ne smije ovisiti o trenutačnoj postavci poslužitelja.
 
 Ne koristiti 32-bitni `INTEGER` za epoch sekunde zbog ograničenja 2038. godine.
 
@@ -937,9 +915,9 @@ Treba osigurati:
 
 # 16. TEHNOLOŠKA ARHITEKTURA
 
-**PREDLOŽENO**
+**DJELOMIČNO DEFINIRANO**
 
-S obzirom na postojeće razvojno iskustvo autora projekta:
+MORLOCK će koristiti postojeći web hosting s PHP-om i MySQL/MariaDB bazom. PHP verziju, strukturu aplikacije i način objave još treba potvrditi.
 
 ### Frontend
 
@@ -949,21 +927,46 @@ S obzirom na postojeće razvojno iskustvo autora projekta:
 - Responsive web aplikacija.
 - Moguća PWA izvedba.
 
+**DEFINIRANO:** Postoji jedna frontend aplikacija s odvojenim funkcionalnim dijelovima prema ulozi:
+
+- `/employee` je operativno sučelje zaposlenika za rad s najmovima.
+- `/owner` je administracijsko sučelje vlasnika.
+
+Pristup rutama i svim pripadajućim API operacijama mora provjeravati PHP backend prema ulozi i ovlastima korisnika. Samo skrivanje dijelova sučelja nije dovoljna zaštita.
+
 ### Backend
 
-- Node.js.
+- PHP na postojećem web hostingu.
 - REST API.
-- WebSocket za promjene stanja.
+
+**OTVORENO:** Treba odrediti treba li MVP-u sinkronizacija promjena stanja u stvarnom vremenu i kako je ostvariti u ograničenjima hostinga. Ne pretpostavljati WebSocket podršku.
 
 ### Baza podataka
 
-- PostgreSQL.
+- MySQL ili MariaDB na postojećem web hostingu.
 
 ### Autentifikacija
 
 Sigurna autentifikacija s provjerom korisničkih ovlasti, organizacije, licence i lokacije.
 
 Točan mehanizam autentifikacije nije definiran.
+
+### Smještaj na postojećem hostingu
+
+**PREDLOŽENO:** MORLOCK treba objaviti na vlastitoj domeni ili poddomeni s vlastitim document rootom, odvojeno od glavne domene hostinga i drugih postojećih web-stranica.
+
+Javno dostupni document root treba sadržavati samo `index.php` i statičke datoteke. PHP poslovna logika, konfiguracija, migracije i logovi trebaju biti izvan njega. Javni `index.php` učitava aplikaciju iz privatne mape istog hosting računa.
+
+Prije implementacije treba potvrditi stvarni document root nove domene i provjeriti dopušta li hosting učitavanje privatnog PHP koda iz susjedne mape (`open_basedir`).
+
+### Dijagnostika i zapisivanje poruka
+
+**DEFINIRANO U NAČELU:** Aplikacija treba prepoznati izvršava li se PHP iz konzole ili kroz web-poslužitelj te poruke zapisivati primjerenom kanalu.
+
+- Pri izvršavanju iz konzole razvojne poruke mogu se ispisati u terminal.
+- Kod web zahtjeva poruke se zapisuju u PHP/server error log; tehnički detalji ne smiju se prikazati korisniku.
+- Okruženje mora biti izričito određeno postavkom, primjerice razvojno ili produkcijsko, a ne samo automatskim prepoznavanjem hostinga.
+- `phpinfo()` smije služiti samo za privremenu dijagnostiku i ne smije ostati javno dostupno niti biti dio produkcijskog bootstrap koda.
 
 ## 16.1. Mobilni uređaji
 
@@ -1458,8 +1461,8 @@ Prije početka implementacije:
 2. Izdvoji definirane zahtjeve.
 3. Izdvoji otvorena pitanja koja stvarno blokiraju implementaciju.
 4. Predloži minimalnu arhitekturu.
-5. Predloži model PostgreSQL baze podataka.
-6. Predloži strukturu Node.js backenda i frontend aplikacije.
+5. Predloži model MySQL/MariaDB baze podataka.
+6. Predloži strukturu PHP backenda i frontend aplikacije.
 7. Razdvoji MVP od budućih mogućnosti.
 8. Nemoj pisati programski kod dok arhitektura i opseg nisu potvrđeni.
 
