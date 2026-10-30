@@ -1,0 +1,3 @@
+morlock.backend/config/config.local.php
+morlock.backend/storage/logs/*
+!morlock.backend/storage/logs/.gitkeep

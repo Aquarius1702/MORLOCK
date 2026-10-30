@@ -8,6 +8,7 @@
 - Potvrđena je osnovna platforma: PHP backend na postojećem web hostingu i MySQL/MariaDB baza.
 - Potvrđena je jedna frontend aplikacija s rutama `/employee` za zaposlenika i `/owner` za vlasnika.
 - Za objavu je predviđena zasebna MORLOCK domena ili poddomena s vlastitim javnim document rootom; privatni PHP kod mora ostati izvan njega.
+- Pripremljen je lokalni kostur koji zrcali planirani hosting raspored: `morlock.9a-zag.com/` za javni dio i `morlock.backend/` za privatni PHP dio.
 - Implementacija još nije započela.
 
 ## Zadnje dovršeno
